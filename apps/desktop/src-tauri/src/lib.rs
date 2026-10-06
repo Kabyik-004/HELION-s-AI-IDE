@@ -15,6 +15,7 @@
 //! may ask the backend to do stays a reviewable, explicit list.
 
 mod app_state;
+mod credentials;
 mod workspace;
 
 use serde::Serialize;
@@ -43,7 +44,8 @@ fn app_info() -> AppInfo {
 pub fn run() {
     tauri::Builder::default()
         // The only plugin: the native folder picker. Its single permission (`dialog:allow-open`)
-        // is declared in `capabilities/default.json`.
+        // is declared in `capabilities/default.json` — the app cannot save, message or confirm
+        // through this plugin.
         .plugin(tauri_plugin_dialog::init())
         // Holds the currently open workspace root, shared by every file command.
         .manage(workspace::WorkspaceState::default())
@@ -65,6 +67,10 @@ pub fn run() {
             workspace::search_paths,
             app_state::load_app_state,
             app_state::save_app_state,
+            credentials::set_secret,
+            credentials::get_secret,
+            credentials::has_secret,
+            credentials::delete_secret,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ForgeAI");

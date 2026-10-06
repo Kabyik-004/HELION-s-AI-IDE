@@ -21,6 +21,8 @@ tauri = { version = "2", features = [] }
 # The native folder picker, used by "Open Folder". Narrowed to `dialog:allow-open` in
 # capabilities/default.json — the app cannot save, message or confirm through this plugin.
 tauri-plugin-dialog = "2"
+# Secure credential storage via OS keychain.
+keyring = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
