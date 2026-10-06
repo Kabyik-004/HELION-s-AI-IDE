@@ -1,0 +1,23 @@
+{
+  "name": "forgeai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ForgeAI - an AI-native desktop IDE. Module 0: Foundation.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run tauri:dev --workspace @forgeai/desktop",
+    "dev:web": "npm run dev:web --workspace @forgeai/desktop",
+    "build": "npm run build --workspace @forgeai/desktop",
+    "build:tauri": "npm run tauri:build --workspace @forgeai/desktop",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "clean": "node scripts/clean.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
