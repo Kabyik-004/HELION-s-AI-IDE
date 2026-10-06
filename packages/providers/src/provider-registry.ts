@@ -6,7 +6,7 @@ import type { ProviderDescriptor, ProviderId } from "./provider-descriptor";
 /**
  * Default in-memory provider registry.
  *
- * This is a real, working registry — it is simply empty until Module 1 registers adapters.
+ * This is a real, working registry — it is simply empty until Module 3 registers adapters.
  * `@forgeai/providers`'s `PROVIDER_CATALOG` supplies the metadata the UI needs in the
  * meantime, so the settings screen is useful before any adapter exists.
  */

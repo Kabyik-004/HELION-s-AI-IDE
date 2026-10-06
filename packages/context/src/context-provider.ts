@@ -18,11 +18,11 @@ export interface ContextCollectionOptions {
 /**
  * A source of context.
  *
- * Examples planned for Module 5: the project tree, a file-content reader, a symbol index, the
+ * Examples planned for Module 6: the project tree, a file-content reader, a symbol index, the
  * git diff, and an explicit "user attached this file" provider. Because each is a separate
  * `ContextProvider`, the engine needs no knowledge of any of them.
  *
- * TODO(module-5): implement project-tree, file, symbol and git context providers.
+ * TODO(module-6): implement project-tree, file, symbol and git context providers.
  */
 export interface ContextProvider {
   readonly id: string;

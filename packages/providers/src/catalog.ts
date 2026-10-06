@@ -9,9 +9,9 @@ const BASE_CAPABILITIES = ["chat", "streaming", "tools"] as const;
  * IMPORTANT: this catalogue contains **descriptors only**. It lets the settings UI present
  * the full roadmap of providers (and their authentication requirements) today, without
  * shipping an adapter that pretends to work. `DefaultProviderRegistry` stays empty until
- * Module 1 registers real factories.
+ * Module 3 registers real factories.
  *
- * TODO(module-1): add a `ProviderFactory` per provider and register it in the registry.
+ * TODO(module-3): add a `ProviderFactory` per provider and register it in the registry.
  * The UI reads descriptors from a registry first, falling back to this catalogue, so nothing
  * here needs to change when adapters land.
  */

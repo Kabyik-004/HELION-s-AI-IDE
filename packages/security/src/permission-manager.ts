@@ -124,7 +124,7 @@ export class PermissionManager implements PermissionInterceptor {
 function sessionGrantKey(request: PermissionRequest): string {
   // NOTE: a remembered grant currently covers every invocation of the same tool at the same
   // level, not just the exact input that was approved. That is acceptable for read-oriented
-  // tools but too broad for file writes. TODO(module-3): scope grants to a fingerprinted
+  // tools but too broad for file writes. TODO(module-4): scope grants to a fingerprinted
   // request (for example tool + path + level) when the approval dialog is built.
   return `${request.level}:${request.toolName}`;
 }

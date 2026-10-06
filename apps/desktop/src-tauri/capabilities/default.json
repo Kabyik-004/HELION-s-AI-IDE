@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Least-privilege capability set for the ForgeAI main window. Module 0 grants only the Tauri core defaults. Every OS capability (file system, shell, keychain, dialog) must be added here explicitly in the module that introduces it.",
+  "description": "Least-privilege capability set for the ForgeAI main window. Grants the Tauri core defaults plus the native folder picker (`dialog:allow-open`). Every other OS capability (shell, keychain, filesystem plugin) must be added here explicitly in the module that introduces it.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "dialog:allow-open"]
 }

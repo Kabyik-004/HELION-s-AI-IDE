@@ -24,9 +24,9 @@ export interface AgentConfig {
  * A `run()` call streams events as the agent works. Cancellation is cooperative via
  * `AbortSignal`, which the loop must forward to providers and tools.
  *
- * TODO(module-6): implement the loop (plan → act → observe → verify → report) as a concrete
+ * TODO(module-7): implement the loop (plan → act → observe → verify → report) as a concrete
  * `Agent`. Module 0 defines only the interface, because the loop depends on providers
- * (Module 1), file tools (Module 2) and the approval UX (Module 3).
+ * (Module 3), file tools (Module 2) and the approval UX (Module 4).
  */
 export interface Agent {
   readonly id: string;
@@ -34,7 +34,7 @@ export interface Agent {
   run(task: AgentTask, signal?: AbortSignal): AsyncIterable<AgentEvent>;
 }
 
-/** Creates agents from configuration. Implemented in Module 6. */
+/** Creates agents from configuration. Implemented in Module 7. */
 export interface AgentEngine {
   createAgent(config: AgentConfig): Agent;
 }

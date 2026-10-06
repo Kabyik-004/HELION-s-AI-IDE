@@ -10,7 +10,7 @@ export type AgentFinishStatus = "completed" | "failed" | "cancelled" | "max-iter
  * The agent's conclusion after a tool ran — distinct from the raw `ToolResult`.
  *
  * Keeping "what happened" (`ToolResult`) separate from "what I make of it" (`Observation`)
- * is what allows the verification step in Module 6 to reason about success rather than
+ * is what allows the verification step in Module 7 to reason about success rather than
  * merely about exit codes.
  */
 export interface Observation {

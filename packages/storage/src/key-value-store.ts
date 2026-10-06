@@ -15,11 +15,11 @@ export interface KeyValueStore {
 /**
  * In-memory implementation.
  *
- * This is honest about what it is: nothing is written to disk, so configuration is lost when
- * the app exits. It exists so the rest of Module 0 (config service, settings UI) can be built
- * and exercised today.
+ * Honest about what it is: nothing is written to disk, so anything stored is lost when the process
+ * exits. It backs the **browser preview** (`npm run dev:web` and the end-to-end tests).
  *
- * TODO(module-1): add a persisted implementation (JSON file under the app data directory).
+ * The desktop application persists preferences through `TauriKeyValueStore`, which writes a single
+ * JSON file in the application config directory via the Rust `app_state` commands.
  */
 export class InMemoryKeyValueStore implements KeyValueStore {
   readonly #entries = new Map<string, unknown>();

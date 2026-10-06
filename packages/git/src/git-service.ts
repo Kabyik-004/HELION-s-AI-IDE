@@ -14,7 +14,7 @@ import type { GitCommitInfo, GitCommitRequest, GitDiff, GitDiffOptions, GitStatu
  *   - `commit`                             → MODERATE (changes repository history)
  *   - (future) `push`, `reset --hard`      → DANGEROUS
  *
- * TODO(module-4): implement `GitService` over `CommandRunnerPort`.
+ * TODO(module-5): implement `GitService` over `CommandRunnerPort`.
  */
 export interface GitService {
   status(projectRoot: string): Promise<GitStatus>;

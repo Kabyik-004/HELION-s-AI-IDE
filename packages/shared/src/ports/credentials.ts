@@ -12,7 +12,7 @@ export interface SecretReference {
 /**
  * Access to secrets.
  *
- * TODO(module-1): back this with the OS keychain
+ * TODO(module-3): back this with the OS keychain
  * (Windows Credential Manager, macOS Keychain, Linux Secret Service) via Rust.
  */
 export interface CredentialStorePort {

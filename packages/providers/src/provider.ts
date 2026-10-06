@@ -9,10 +9,10 @@ import type { ProviderDescriptor, ProviderId } from "./provider-descriptor";
  *
  * There is deliberately **no implementation** of `Provider` in Module 0. Adapters that talk
  * to OpenAI, Anthropic, Gemini, OpenRouter, Groq, Mistral, Ollama and custom
- * OpenAI-compatible endpoints arrive in Module 1. Shipping a stub here would be a fake
+ * OpenAI-compatible endpoints arrive in Module 3. Shipping a stub here would be a fake
  * implementation, and ForgeAI's development principles forbid that.
  *
- * TODO(module-1): implement adapters for the providers listed in `PROVIDER_CATALOG`.
+ * TODO(module-3): implement adapters for the providers listed in `PROVIDER_CATALOG`.
  */
 export interface Provider {
   readonly descriptor: ProviderDescriptor;

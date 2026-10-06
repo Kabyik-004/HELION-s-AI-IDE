@@ -26,7 +26,7 @@ export interface TerminalSessionOptions {
  * interfaces in Module 0 — there is no PTY implementation anywhere in the codebase, because
  * ForgeAI must never expose unrestricted shell execution.
  *
- * TODO(module-3): implement this on the Rust side (portable-pty) behind an approval flow.
+ * TODO(module-4): implement this on the Rust side (portable-pty) behind an approval flow.
  */
 export interface TerminalSession {
   readonly id: string;

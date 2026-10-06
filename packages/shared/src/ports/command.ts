@@ -27,7 +27,7 @@ export interface CommandResult {
  * Executes a single command and waits for it to finish.
  *
  * There is deliberately **no implementation** in Module 0. Restricting command execution
- * correctly requires the permission UX from Module 3, and shipping an "execute anything"
+ * correctly requires the permission UX from Module 4, and shipping an "execute anything"
  * function now would violate ForgeAI's security principle.
  */
 export interface CommandRunnerPort {

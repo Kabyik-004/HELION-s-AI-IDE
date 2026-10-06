@@ -9,10 +9,10 @@ ForgeAI is **not** a fork of, or a clone of, any existing IDE or agent. Its arch
 designed from first principles so that each major subsystem (UI, providers, agent, tools,
 context, terminal, git, storage, security) can be replaced independently.
 
-> **Status: Module 0 — Foundation.**
-> This module establishes the project structure and the core abstractions only.
-> The AI is **not** wired up yet and **no tools actually execute** yet. This is intentional:
-> the point of Module 0 is a clean, buildable skeleton that later modules can safely grow into.
+> **Status: Module 2 — Real Project Workspace (complete).**
+> Module 0 established the foundation, Module 1 built the desktop shell, and Module 2 turned it
+> into a real workspace: open any local folder, browse it, edit files and save them.
+> The AI is **not** connected yet — that is a later module. Nothing is faked; see *Current module*.
 
 ---
 
@@ -37,7 +37,30 @@ To get there, ForgeAI must eventually let a developer:
 10. Inspect Git changes.
 11. Run autonomous coding tasks.
 
-Module 0 builds the foundation these capabilities will plug into.
+---
+
+## The interface
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ ForgeAI   Project  File  View  Terminal  Help        ▤ ▥ ▦ ⚙     │  TitleBar
+├──────────┬───────────────────────────────┬───────────────────────┤
+│ forgeai  │  App.tsx •  Button.tsx  ×     │ AI assistant          │
+│ ▾ src    │ ┌───────────────────────────┐ │ ● no provider         │
+│  ▾ comp  │ │ 1  import { Button } …    │ │                       │
+│   Bu…tsx │ │ 2  import { Header } …    │ │ 🤖 I can help you …   │
+│   He…tsx │ │ 3                         │ │                       │
+│  App.tsx │ └───────────────────────────┘ │ [ Ask ForgeAI… ]      │
+│  main    │                               │ [Send] [Stop]         │
+├──────────┴───────────────────────────────┴───────────────────────┤
+│ Terminal │ Problems                                              │  BottomPanel
+├──────────────────────────────────────────────────────────────────┤
+│ forgeai-demo   no repository   Ln 1, Col 1        v0.1.0         │  StatusBar
+└──────────────────────────────────────────────────────────────────┘
+```
+
+Every region is independently resizable by dragging the dividers, and the layout can be reset
+from **View → Reset layout**. Right-click anywhere in the explorer for file operations.
 
 ---
 
@@ -47,24 +70,69 @@ ForgeAI is an **npm workspace monorepo**. There is one desktop application and a
 independent packages. Packages depend on **interfaces**, never on each other's internals.
 
 ```
-apps/desktop          The Tauri + React application shell (UI only)
+apps/desktop              The Tauri + React application
+  src/
+    components/
+      layout/             TitleBar, ActivityBar, Sidebar, StatusBar, ResizeHandle, MenuBar, Dialog
+      explorer/           FileTree + FileTreeNode + ExplorerPanel (real file system)
+      editor/             EditorArea, EditorTabs, CodeEditor (Monaco), WelcomeView
+      ai/                 AIChatPanel, ChatComposer, ChatMessageItem
+      bottom/             BottomPanel, TerminalView, ProblemsView
+      settings/           SettingsPanel
+      dialogs/            DialogHost (prompt / confirm / unsaved)
+      common/             Button, IconButton, PanelHeader, EmptyState, ContextMenu, NotificationCenter
+      icons/              Inline SVG icon set (no dependency)
+    state/
+      app-state.tsx       Services + user configuration (including recent folders)
+      ide-state.tsx       IDE view state + every file operation
+      ide-reducer.ts      Pure state transitions
+      ide-types.ts        State, buffer, dialog and notification types
+    lib/
+      services.ts         Composition root — the only place implementations are chosen
+      workspace-service.ts Owns which folder is open and hands out the FileSystemPort
+      tauri-backend.ts    The only module that speaks Tauri IPC
+      tauri-fs.ts         FileSystemPort over the backend (absolute ⇄ workspace-relative)
+      tauri-key-value-store.ts  Preferences persisted to the app config directory
+      example-file-system.ts    In-memory project for the browser preview and tests
+    types/                View-only types (chat, problems)
+  src-tauri/
+    src/
+      lib.rs              Tauri builder + command registration
+      workspace.rs        Workspace-confined file system (with unit tests)
+      app_state.rs        Preference persistence (single JSON file)
+    capabilities/         Least-privilege permission set
 packages/
-  shared              Cross-cutting primitives + capability "ports"
-  security            Permission levels, policies, the pre-execution interceptor
-  tools               Tool abstraction, registry, permission-guarded executor
-  providers           AI provider abstraction (OpenAI, Anthropic, ... adapters later)
-  agent               Agent / message / task / event abstractions
-  context             Project-context abstraction
-  git                 Git service abstraction
-  terminal            Terminal + command-runner abstractions
-  storage             Config + credential storage abstractions
+  shared                  Primitives + capability ports (FileSystemPort, CommandRunnerPort, …)
+  security                Permission levels, policy, the pre-execution interceptor
+  tools                   Tool contract, registry, permission-guarded executor
+  providers               Provider abstraction + metadata catalogue
+  agent                   Agent / message / task / event abstractions
+  context                 Project-context abstraction
+  git                     Git service abstraction
+  terminal                Terminal + command-runner abstractions
+  storage                 Config + credential storage abstractions
 ```
 
 ### The rule that keeps it modular
 
 The UI never talks to a provider SDK, a shell, or the file system directly. It talks to
-**abstractions**. Concrete implementations (a real OpenAI adapter, a real PTY, a real file
-system) are added in later modules behind those abstractions.
+**abstractions**. The explorer and editor read files through `FileSystemPort`, so Module 2 was
+able to swap the in-memory example project for real disk access with **no component changes** —
+only the composition root and a new implementation.
+
+### UI state
+
+There is no state-management library. Two React contexts cover the whole shell:
+
+| Context | Owns | Persisted? |
+| ------- | ---- | ---------- |
+| `AppStateProvider` | Services and user configuration (provider, model, agent settings, recent folders) | Yes, on the desktop |
+| `IdeStateProvider` | View state: open tabs, buffers, active panel, panel visibility, layout sizes, cursor, problems, dialogs, notifications | No — view state |
+
+They are deliberately separate: a settings change does not re-render the shell, and closing a
+panel can never trigger a configuration write. `IdeStateProvider` is a reducer (`ide-reducer.ts`)
+plus a memoised action object, and it is the **only** code that touches `FileSystemPort`, so every
+file operation funnels through one reviewable place.
 
 ### Security boundary
 
@@ -72,9 +140,14 @@ Every tool carries a `PermissionLevel` (`SAFE`, `MODERATE`, `DANGEROUS`). The
 `GuardedToolExecutor` in `@forgeai/tools` calls the `PermissionInterceptor` from
 `@forgeai/security` **before** a tool body runs, and refuses to run it unless the decision is
 `allow`. There is **no unrestricted shell execution** anywhere in the codebase — the terminal
-package defines interfaces only.
+package defines interfaces only, and the terminal view says so rather than pretending.
 
-See [`docs/architecture.md`](docs/architecture.md) for the detailed design.
+The file system has its own boundary, since it is the first capability that can change a user's
+data. The renderer never sends an absolute path: every file command takes a
+**workspace-relative** path, and the Rust backend rejects anything that is absolute, contains a
+`..` component, or resolves outside the open folder after canonicalisation (which also stops a
+symlink from pointing out of the workspace). See
+[`docs/architecture.md § 11`](docs/architecture.md) for the full model.
 
 ---
 
@@ -85,14 +158,11 @@ See [`docs/architecture.md`](docs/architecture.md) for the detailed design.
 | Desktop shell    | [Tauri 2](https://tauri.app)            | Rust backend, small binaries, native OS integration |
 | UI               | [React 19](https://react.dev)           | Frontend only; no AI logic in components           |
 | Language         | TypeScript (strict)                     | `strict`, `noUncheckedIndexedAccess`, `verbatimModuleSyntax` |
-| Styling          | [Tailwind CSS 4](https://tailwindcss.com) | Utility-first, no runtime CSS-in-JS              |
-| Editor           | [Monaco Editor](https://microsoft.github.io/monaco-editor/) | The editor that powers VS Code   |
+| Styling          | [Tailwind CSS 4](https://tailwindcss.com) | Design tokens in `@theme`; no runtime CSS-in-JS   |
+| Editor           | [Monaco Editor](https://microsoft.github.io/monaco-editor/) | Bundled locally, custom `forgeai-dark` theme |
 | Build tool       | [Vite](https://vite.dev)                | Fast dev server + production bundler               |
 | Package manager  | npm workspaces                          | No external monorepo tool required                 |
-
-The Rust side (Tauri) is intentionally minimal in Module 0: it starts the app window and
-exposes a single `app_info` command. Real backend capabilities (file system, PTY, keychain)
-arrive in later modules behind the TypeScript ports defined here.
+| Tests            | [Playwright](https://playwright.dev)    | End-to-end shell tests against a production build  |
 
 ---
 
@@ -102,30 +172,15 @@ arrive in later modules behind the TypeScript ports defined here.
 forgeai/
 ├── apps/
 │   └── desktop/
-│       ├── src/                 # React application (UI only)
-│       │   ├── components/
-│       │   ├── state/
-│       │   └── lib/
+│       ├── src/                 # React application
 │       └── src-tauri/           # Rust/Tauri shell
-│           ├── src/
-│           ├── capabilities/
-│           ├── icons/
-│           ├── Cargo.toml
-│           └── tauri.conf.json
-├── packages/
-│   ├── shared/
-│   ├── security/
-│   ├── tools/
-│   ├── providers/
-│   ├── agent/
-│   ├── context/
-│   ├── git/
-│   ├── terminal/
-│   └── storage/
+├── packages/                    # 9 independently replaceable modules
 ├── docs/
 │   └── architecture.md
 ├── tests/
+│   └── e2e/                     # Playwright shell tests
 ├── scripts/
+├── playwright.config.ts
 ├── package.json
 ├── tsconfig.base.json
 ├── README.md
@@ -171,38 +226,103 @@ npm run dev:web
 npm run typecheck
 ```
 
-### Production build
+### Build
 
 ```bash
 npm run build        # type-check + bundle the frontend
 npm run build:tauri  # full Tauri desktop bundle (requires Rust + platform build tools)
 ```
 
+### Test
+
+```bash
+npm run test:e2e     # builds the frontend, serves it, and drives it in a real browser
+```
+
+The end-to-end suite covers the shell **and** the workspace: every panel renders, folders expand
+lazily, files open into tabs, edits are marked and saved, files and folders can be created,
+renamed and deleted (with confirmation), closing a dirty file prompts, and the console stays
+free of errors throughout.
+
+The path-confinement rules are covered separately by unit tests over a real temporary directory:
+
+```bash
+cd apps/desktop/src-tauri && cargo test
+```
+
+### Windows on ARM (ARM64)
+
+Most platforms build with the default toolchain. On **Windows on ARM**, one extra step may be
+needed. The ARM64 MSVC linker (`Hostarm64\arm64\link.exe`) ships in the optional
+**"MSVC v143 — VS 2022 C++ ARM64 build tools"** component, which the default *Desktop
+development with C++* workload does **not** install. If `cargo` fails with
+`linker 'link.exe' not found`, either add that component in the Visual Studio Installer, or use
+the x86_64 toolchain — it links with the x64 toolset and runs under Windows' x64 emulation:
+
+```bash
+rustup toolchain install stable-x86_64-pc-windows-msvc --force-non-host
+RUSTUP_TOOLCHAIN=stable-x86_64-pc-windows-msvc npm run tauri:build
+```
+
+This produces an x64 application that runs on ARM64 Windows via emulation. It is identical in
+behaviour to a native ARM64 build for ForgeAI's purposes.
+
 ---
 
 ## Current module
 
-**Module 0 — Foundation (complete).**
+**Module 2 — Real Project Workspace, File Explorer & Editor (complete).**
 
-What exists today:
+What works today:
 
-- A buildable npm-workspace monorepo with one Tauri + React desktop app.
-- Strict-TypeScript abstractions for providers, agents, tools, context, terminal, git and storage.
-- A permission model (`SAFE` / `MODERATE` / `DANGEROUS`) with a real pre-execution interceptor.
-- A provider registry and a metadata catalogue of the providers ForgeAI intends to support.
-- A configuration service that never stores secrets, plus a credential-store abstraction
-  intended to be backed by the OS keychain later.
-- A desktop UI shell: activity bar, explorer, Monaco editor surface, chat panel, terminal
-  panel, status bar and a settings panel for provider/model selection.
+- **Open any local folder** through the native picker (*Project → Open Folder…*). The chosen
+  folder becomes the workspace, its contents are scanned, and recent folders are remembered
+  across restarts.
+- **Real directory browsing**: lazy expansion (only what you open is read), folders-first
+  ordering, dot-file toggle, a truncation notice for enormous directories, and per-directory
+  refresh.
+- **Real file editing**: Monaco with language detection by extension, tabs that follow renames,
+  per-file undo history, `Ctrl+S`, Save All, and a **binary / too-large notice** instead of
+  loading junk into the editor.
+- **File operations** from the explorer toolbar, context menu and File menu: create file, create
+  folder, rename, and delete — the last two guarded by confirmation, with renames moving open
+  tabs and buffers with them.
+- **Unsaved-changes protection**: a dirty marker per tab, a Save / Don't Save / Cancel prompt
+  before closing, and a warning if the file changed on disk underneath you.
+- **Graceful errors**: failures are translated into readable messages ("That file or folder no
+  longer exists.") with the technical detail available behind a *Details* toggle.
+- **Preferences persisted** to the application config directory on the desktop.
+- **22 end-to-end tests** (shell + workspace) and **13 Rust unit tests** over real temporary
+  directories, all passing.
 
 What deliberately does **not** exist yet (see the TODOs in code):
 
-- No provider adapters (no network calls).
-- No agent execution loop.
-- No tool implementations.
-- No command execution, no PTY.
-- No real Git integration (HTTP calls to Git providers are also out of scope).
-- No disk persistence and no OS keychain integration.
+- No AI provider connection. Provider adapters, credentials and streaming arrive in **Module 3**.
+- No command execution and no PTY. The terminal view states this explicitly; a later module.
+- No git integration and no tool implementations; a later module.
+- No context engine providers, no agent loop.
+- File watching is not implemented: external changes are detected when the window regains focus
+  (using file modification times), not continuously. See *Known limitations* in the Module 2
+  report.
+
+### How the file system is wired
+
+```
+React component
+   │  calls an action (openFile, saveFile, createFile, renameEntry, deleteEntry)
+   ▼
+IdeStateProvider            ← the only place that touches FileSystemPort
+   │  absolute path
+   ▼
+FileSystemPort              ← the abstraction (packages/shared)
+   │
+   ├── TauriFileSystem       desktop: converts to a workspace-relative path, then invoke()
+   │        │
+   │        ▼  tauri-backend.ts (the only module that speaks IPC)
+   │     Rust workspace.rs   ← rejects traversal, confines to the open folder, hits the OS
+   │
+   └── ExampleFileSystem     browser preview and end-to-end tests (in-memory example project)
+```
 
 ---
 
@@ -210,17 +330,14 @@ What deliberately does **not** exist yet (see the TODOs in code):
 
 | Module | Focus                                                                 |
 | ------ | --------------------------------------------------------------------- |
-| **0**  | **Foundation — structure, abstractions, security boundary (this module)** |
-| 1     | Provider adapters + secure credential storage + streaming chat        |
-| 2     | Real file system tooling (read/write/edit/list/search) behind permissions |
-| 3     | Terminal + command execution with a permission-gated approval flow     |
-| 4     | Git integration (status, diff, commit)                                 |
-| 5     | Context engine (project understanding, indexing, retrieval)           |
-| 6     | Agent loop (plan → act → observe → verify → report)                   |
-| 7     | Autonomous task execution, checkpoints and rollback                   |
+| 0      | Foundation — structure, abstractions, security boundary               |
+| 1      | IDE Shell — layout, panels, theme, editor, explorer UI, AI panel UI    |
+| **2**  | **Real Project Workspace — open a folder, real file system, file operations, save/edit (this module)** |
+| 3     | AI Providers — provider adapters, secure credential storage, streaming chat |
+| 4+     | Terminal (PTY, permission-gated commands), Git, tools, context engine, agent loop, autonomous tasks |
 
-Modules are intentionally independent. A later module may be developed without touching the
-UI because the UI already depends on abstractions, not implementations.
+Modules are intentionally independent. A later module may be developed without touching the UI,
+because the UI already depends on abstractions rather than implementations.
 
 ---
 
@@ -235,12 +352,14 @@ Security is a first-class design concern, not an afterthought.
 3. **Intercept before execution.** The permission check is a mandatory step *in front of*
    every tool, enforced in one place (`GuardedToolExecutor`) rather than scattered across tools.
 4. **No unrestricted shell.** ForgeAI does not implement arbitrary shell execution. Commands
-   will be modelled as requests that must be approved.
+   will be modelled as requests that must be approved. The terminal view reflects this.
 5. **Secrets are never stored in plain text.** API keys will live in the OS credential store
    (Windows Credential Manager, macOS Keychain, Secret Service). Configuration files hold
    references and preferences only.
-6. **Smallest possible surface.** Tauri IPC exposes as little as possible; real capabilities
-   are added one module at a time, each with its own permission review.
+6. **Smallest possible surface.** Tauri IPC exposes as little as possible. Real capabilities are
+   added one module at a time, each with its own permission entry in
+   `src-tauri/capabilities/`. Module 2 added exactly one plugin permission — `dialog:allow-open`,
+   the native folder picker — and no general-purpose file plugin.
 
 ---
 

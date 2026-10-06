@@ -6,7 +6,7 @@ import type { CredentialStorePort, SecretReference } from "@forgeai/shared";
  * The interface is intentionally tiny. Implementations are expected to delegate to an OS
  * facility, never to a file in the project.
  *
- * TODO(module-1): implement via the OS keychain — Windows Credential Manager, macOS Keychain,
+ * TODO(module-3): implement via the OS keychain — Windows Credential Manager, macOS Keychain,
  * or Linux Secret Service — through a Rust `keyring` command.
  */
 export interface SecureCredentialStore {

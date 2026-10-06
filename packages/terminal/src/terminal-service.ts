@@ -9,7 +9,7 @@ import type { TerminalSession, TerminalSessionOptions } from "./terminal-session
  *   1. the working directory is inside the opened project, and
  *   2. the session was explicitly approved by the user.
  *
- * TODO(module-3): implement `TerminalService` with a PTY and per-session approval.
+ * TODO(module-4): implement `TerminalService` with a PTY and per-session approval.
  */
 export interface TerminalService {
   createSession(options: TerminalSessionOptions): Promise<TerminalSession>;

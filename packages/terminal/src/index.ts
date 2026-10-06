@@ -5,7 +5,7 @@
  *
  * Module 0 ships interfaces only. There is intentionally **no implementation**, and there is
  * no `child_process` import anywhere in the repository. Command execution requires the
- * approval experience from Module 3; until then, ForgeAI has no way to run anything.
+ * approval experience from Module 4; until then, ForgeAI has no way to run anything.
  */
 
 export type { TerminalExitInfo, TerminalSession, TerminalSessionOptions } from "./terminal-session";

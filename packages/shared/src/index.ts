@@ -13,15 +13,22 @@ export * from "./disposable";
 export * from "./events";
 export * from "./logger";
 
-// Capability ports (interfaces only in Module 0 — see ./ports/index.ts).
+// Capability ports (interfaces only until an implementation module lands — see ./ports/index.ts).
 export type {
   FileSystemPort,
   DirEntry,
+  DirectoryListing,
   FileStat,
+  FileContent,
   EntryKind,
+  ReadDirectoryOptions,
   CommandRunnerPort,
   CommandRequest,
   CommandResult,
   CredentialStorePort,
   SecretReference,
 } from "./ports";
+// `FileSystemError` is a value (a class), so it is re-exported separately from the type-only
+// block above.
+export { FileSystemError } from "./ports";
+export type { FileSystemErrorCode } from "./ports";

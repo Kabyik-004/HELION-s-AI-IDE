@@ -6,7 +6,7 @@
  * keywords its tools will use. It can be widened later without changing tool definitions,
  * because the field is structural.
  *
- * TODO(module-2): validate tool input against this schema before execution.
+ * TODO(module-5): validate tool input against this schema before execution.
  */
 export interface JsonSchema {
   readonly type?: "object" | "string" | "number" | "integer" | "boolean" | "array" | "null";

@@ -6,11 +6,11 @@
  *
  * Module 0 defines the abstraction and the enforcement point. No concrete tools exist yet
  * (`read_file`, `run_command`, `git_commit`, ...) because implementing them safely depends on
- * the approval experience from Module 3.
+ * the approval experience from Module 4.
  *
- * TODO(module-2): implement file system tools behind `ToolDefinition`.
- * TODO(module-3): implement `run_command` with an explicit approval prompt.
- * TODO(module-4): implement git tools.
+ * TODO(module-5): implement file system tools behind `ToolDefinition`.
+ * TODO(module-4): implement `run_command` with an explicit approval prompt.
+ * TODO(module-5): implement git tools.
  */
 
 export * from "./json-schema";

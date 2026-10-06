@@ -48,6 +48,11 @@ export default defineConfig({
       ignored: ["**/src-tauri/**"],
     },
   },
+  preview: {
+    // Used by the end-to-end tests, which run against a real production build.
+    port: 4173,
+    strictPort: true,
+  },
   build: {
     target: "es2022",
     outDir: "dist",

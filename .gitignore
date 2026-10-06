@@ -17,6 +17,12 @@ apps/desktop/src-tauri/gen/
 npm-debug.log*
 logs/
 
+# Test artefacts
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
 # Environment / secrets
 .env
 .env.*

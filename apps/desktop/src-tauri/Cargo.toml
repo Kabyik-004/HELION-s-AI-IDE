@@ -16,11 +16,17 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-# Tauri core. No plugins are enabled in Module 0 on purpose: every OS capability must be
-# added deliberately, together with its permission entry, in the module that needs it.
+# Tauri core.
 tauri = { version = "2", features = [] }
+# The native folder picker, used by "Open Folder". Narrowed to `dialog:allow-open` in
+# capabilities/default.json — the app cannot save, message or confirm through this plugin.
+tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[dev-dependencies]
+# Real temporary directories for the workspace file-system unit tests.
+tempfile = "3"
 
 [features]
 default = []

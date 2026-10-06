@@ -9,11 +9,20 @@
  * Module 0 intentionally ships **no implementations** of these ports. Real implementations
  * arrive in later modules, most likely on the Rust side of Tauri.
  *
- * TODO(module-2): implement `FileSystemPort` via Tauri commands.
- * TODO(module-3): implement `CommandRunnerPort` via a permission-gated terminal.
- * TODO(module-1): implement `CredentialStorePort` via the OS keychain.
+ * TODO(module-4): implement `CommandRunnerPort` via a permission-gated terminal.
+ * TODO(module-3): implement `CredentialStorePort` via the OS keychain.
  */
 
-export type { FileSystemPort, DirEntry, FileStat, EntryKind } from "./filesystem";
+export type {
+  FileSystemPort,
+  DirEntry,
+  DirectoryListing,
+  FileStat,
+  FileContent,
+  EntryKind,
+  ReadDirectoryOptions,
+} from "./filesystem";
+export { FileSystemError } from "./filesystem-error";
+export type { FileSystemErrorCode } from "./filesystem-error";
 export type { CommandRunnerPort, CommandRequest, CommandResult } from "./command";
 export type { CredentialStorePort, SecretReference } from "./credentials";
