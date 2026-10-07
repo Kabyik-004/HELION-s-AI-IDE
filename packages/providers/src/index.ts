@@ -1,17 +1,21 @@
 /**
  * @forgeai/providers
  *
- * Provider abstraction, registry, catalog and initial implementations.
+ * The provider abstraction plus the non-secret catalogue of providers ForgeAI intends to
+ * support.
  *
- * Module 3: AI Provider & API Key System.
- *
- * This package is the foundation for all AI functionality in ForgeAI.
- * It should NOT be depended on by the UI for provider-specific logic —
- * only by the provider service and the settings UI.
+ * This package deliberately ships **contracts and metadata only** — `Provider`,
+ * `ProviderFactory`, `ProviderRegistry`, the chat vocabulary and `PROVIDER_CATALOG`. The
+ * registry stays empty until real adapters are registered, so no fake implementation can
+ * pretend to work. Concrete adapters live in the application layer
+ * (`apps/desktop/src/features/ai-providers`), which keeps provider-specific code out of the
+ * shared packages and out of the UI.
  */
 
-export * from "./core";
-export * from "./core/registry";
-export * from "./core/provider-configuration-service";
+export * from "./provider-descriptor";
+export * from "./provider";
+export * from "./provider-error";
+export * from "./provider-registry";
 export * from "./catalog";
 export * from "./model";
+export * from "./chat";

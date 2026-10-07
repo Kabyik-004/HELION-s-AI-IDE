@@ -1,0 +1,90 @@
+﻿
+> forgeai@0.1.0 test:unit
+> vitest run
+
+
+ RUN  v5.0.3 C:/Users/gsoum/HELION-s-AI-IDE
+
+ Γ£ô tests/unit/providerValidation.test.ts (7 tests) 4ms
+stdout | tests/unit/providerService.test.ts > ProviderService > adds a provider, stores the key separately, and activates it
+[forgeai][test] provider credential stored { instanceId: 'openai-openai-personal' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > adds a provider, stores the key separately, and activates it
+[forgeai][test] provider instance added { instanceId: 'openai-openai-personal', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > never writes the key into configuration
+[forgeai][test] provider credential stored { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > never writes the key into configuration
+[forgeai][test] provider instance added { instanceId: 'openai-openai', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > gives two instances of the same provider distinct ids
+[forgeai][test] provider credential stored { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > gives two instances of the same provider distinct ids
+[forgeai][test] provider instance added { instanceId: 'openai-openai', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > gives two instances of the same provider distinct ids
+[forgeai][test] provider credential stored { instanceId: 'openai-openai-2' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > gives two instances of the same provider distinct ids
+[forgeai][test] provider instance added { instanceId: 'openai-openai-2', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > removes an instance together with its credential and clears the selection
+[forgeai][test] provider credential stored { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > removes an instance together with its credential and clears the selection
+[forgeai][test] provider instance added { instanceId: 'openai-openai', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > removes an instance together with its credential and clears the selection
+[forgeai][test] provider credential removed { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > removes an instance together with its credential and clears the selection
+[forgeai][test] provider instance removed { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > refuses to activate a disabled instance
+[forgeai][test] provider credential stored { instanceId: 'openai-first' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > refuses to activate a disabled instance
+[forgeai][test] provider instance added { instanceId: 'openai-first', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > refuses to activate a disabled instance
+[forgeai][test] provider credential stored { instanceId: 'openai-second' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > refuses to activate a disabled instance
+[forgeai][test] provider instance added { instanceId: 'openai-second', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > refuses to activate a disabled instance
+[forgeai][test] provider instance updated { instanceId: 'openai-first' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > round-trips non-secret configuration through the store
+[forgeai][test] provider credential stored { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > round-trips non-secret configuration through the store
+[forgeai][test] provider instance added { instanceId: 'openai-openai', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > round-trips non-secret configuration through the store
+[forgeai][test] configuration loaded { hasStoredValue: true }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > tests a connection through the tester without exposing the key
+[forgeai][test] provider credential stored { instanceId: 'openai-openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > tests a connection through the tester without exposing the key
+[forgeai][test] provider instance added { instanceId: 'openai-openai', providerType: 'openai' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > reports an honest failure when the provider has no endpoint
+[forgeai][test] provider credential stored { instanceId: 'custom-openai-compatible-local' }
+
+stdout | tests/unit/providerService.test.ts > ProviderService > reports an honest failure when the provider has no endpoint
+[forgeai][test] provider instance added {
+  instanceId: 'custom-openai-compatible-local',
+  providerType: 'custom-openai-compatible'
+}
+
+ Γ£ô tests/unit/providerService.test.ts (10 tests) 9ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  19:23:12
+   Duration  321ms (transform 76%, import 18%, tests 4%, worker 2%)
+

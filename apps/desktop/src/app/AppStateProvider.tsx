@@ -34,8 +34,6 @@ export interface AppStateValue {
   readonly appInfo: AppInfoDto | undefined;
   /** False until stored configuration has been read. */
   readonly ready: boolean;
-  selectProvider(providerId: string | undefined): Promise<void>;
-  selectModel(modelId: string | undefined): Promise<void>;
   updateAgentSettings(patch: { maxIterations?: number; autoApproveSafeTools?: boolean }): Promise<void>;
   /** Records a folder in the recent list, newest first. Persisted when the desktop backend is available. */
   rememberProject(path: string): Promise<void>;
@@ -85,23 +83,6 @@ export function AppStateProvider({ children }: { readonly children: ReactNode })
     };
   }, [services]);
 
-  const selectProvider = useCallback(
-    async (providerId: string | undefined) => {
-      // Changing provider invalidates the model, since models are provider-specific.
-      await services.config.update({
-        provider: { selectedProviderId: providerId, selectedModelId: undefined },
-      });
-    },
-    [services],
-  );
-
-  const selectModel = useCallback(
-    async (modelId: string | undefined) => {
-      await services.config.update({ provider: { selectedModelId: modelId } });
-    },
-    [services],
-  );
-
   const updateAgentSettings = useCallback(
     async (patch: { maxIterations?: number; autoApproveSafeTools?: boolean }) => {
       await services.config.update({ agent: patch });
@@ -132,12 +113,10 @@ export function AppStateProvider({ children }: { readonly children: ReactNode })
       providers,
       appInfo,
       ready,
-      selectProvider,
-      selectModel,
       updateAgentSettings,
       rememberProject,
     }),
-    [services, config, providers, appInfo, ready, selectProvider, selectModel, updateAgentSettings, rememberProject],
+    [services, config, providers, appInfo, ready, updateAgentSettings, rememberProject],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

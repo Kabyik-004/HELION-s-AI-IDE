@@ -1,36 +1,33 @@
-//! Secure credential storage via OS keychain.
+//! Secure credential storage via the OS keychain.
 //!
 //! Uses the `keyring` crate which provides cross-platform access to:
 //! - Windows: Credential Manager
-//! - macOS: Keychain
-//! - Linux: Secret Service (libsecret)
+//! - macOS:   Keychain
+//! - Linux:   Secret Service (libsecret)
+//!
+//! Credentials are **application-global**, not scoped to the open folder: an API key belongs to
+//! the developer, not to a project, and configuring a provider must not require a folder to be
+//! open. The renderer passes only an opaque id (`provider:<instanceId>:apiKey`); the secret value
+//! is never written to configuration, logs or error messages.
 
 use keyring::Entry;
 use serde::Serialize;
-use tauri::State;
 
-use crate::workspace::{FsError, FsErrorCode};
-
-/// The canonical key prefix for ForgeAI credentials.
-const KEY_PREFIX: &str = "forgeai";
+/// The keychain service name every ForgeAI credential is stored under.
+pub(crate) const SERVICE: &str = "forgeai";
 
 /// Error codes for credential operations.
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum CredentialErrorCode {
-    /// No workspace is open.
-    NoWorkspace,
     /// The credential does not exist.
     NotFound,
-    /// The credential already exists.
-    AlreadyExists,
     /// The OS keychain reported an error.
     KeyringError,
-    /// Internal error.
-    Internal,
 }
 
-/// A serialisable error for credential operations.
+/// A serialisable error for credential operations. `detail` is for developers and never contains
+/// the secret itself.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CredentialError {
@@ -41,87 +38,57 @@ pub struct CredentialError {
 }
 
 impl CredentialError {
-    fn new(code: CredentialErrorCode, message: impl Into<String>) -> Self {
-        Self { code, message: message.into(), detail: None }
-    }
-
-    fn with_detail(code: CredentialErrorCode, message: impl Into<String>, detail: impl Into<String>) -> Self {
-        Self { code, message: message.into(), detail: Some(detail.into()) }
-    }
-
     fn keyring_error(operation: &str, error: &keyring::Error) -> Self {
-        let (code, message) = match error {
-            keyring::Error::NoEntry => (CredentialErrorCode::NotFound, "Credential not found."),
-            _ => (CredentialErrorCode::KeyringError, "The OS keychain reported an error."),
+        let code = match error {
+            keyring::Error::NoEntry => CredentialErrorCode::NotFound,
+            _ => CredentialErrorCode::KeyringError,
         };
-        Self::with_detail(code, format!("Could not {operation} credential."), format!("{error}"))
+        Self {
+            code,
+            message: format!("Could not {operation} credential."),
+            detail: Some(format!("{error}")),
+        }
     }
 }
 
 type CredResult<T> = Result<T, CredentialError>;
 
-/// Builds the canonical keyring entry name for a credential.
-fn entry_name(id: &str) -> String {
-    format!("{KEY_PREFIX}:{id}")
+/// The keychain entry for an opaque credential id.
+pub(crate) fn keyring_entry(id: &str) -> Entry {
+    Entry::new(SERVICE, id)
 }
 
 /// Stores a secret in the OS keychain.
 #[tauri::command]
-pub fn set_secret(state: State<'_, crate::workspace::WorkspaceState>, id: String, secret: String) -> CredResult<()> {
-    let root = {
-        let guard = state.0.lock().expect("workspace mutex poisoned");
-        guard.clone().ok_or_else(|| CredentialError::new(CredentialErrorCode::NoWorkspace, "No folder is open."))?
-    };
-
-    let entry = Entry::new(&format!("{}:{}", root.display(), entry_name(&id)), "")
-        .map_err(|e| CredentialError::with_detail(CredentialErrorCode::Internal, "Could not create keyring entry.", format!("{e}")))?;
-
-    entry.set_password(&secret).map_err(|e| CredentialError::keyring_error("store", &e))
+pub fn set_secret(id: String, secret: String) -> CredResult<()> {
+    keyring_entry(&id).set_password(&secret).map_err(|e| CredentialError::keyring_error("store", &e))
 }
 
-/// Retrieves a secret from the OS keychain.
+/// Retrieves a secret.
+///
+/// The value crosses the IPC boundary only for an operation that genuinely needs it (a provider
+/// adapter, for example). There is no UI action that calls this merely to display a key.
 #[tauri::command]
-pub fn get_secret(state: State<'_, crate::workspace::WorkspaceState>, id: String) -> CredResult<String> {
-    let root = {
-        let guard = state.0.lock().expect("workspace mutex poisoned");
-        guard.clone().ok_or_else(|| CredentialError::new(CredentialErrorCode::NoWorkspace, "No folder is open."))?
-    };
-
-    let entry = Entry::new(&format!("{}:{}", root.display(), entry_name(&id)), "")
-        .map_err(|e| CredentialError::with_detail(CredentialErrorCode::Internal, "Could not create keyring entry.", format!("{e}")))?;
-
-    entry.get_password().map_err(|e| CredentialError::keyring_error("retrieve", &e))
+pub fn get_secret(id: String) -> CredResult<String> {
+    keyring_entry(&id).get_password().map_err(|e| CredentialError::keyring_error("retrieve", &e))
 }
 
-/// Checks if a secret exists in the OS keychain.
+/// Reports whether a secret exists, without returning it.
 #[tauri::command]
-pub fn has_secret(state: State<'_, crate::workspace::WorkspaceState>, id: String) -> CredResult<bool> {
-    let root = {
-        let guard = state.0.lock().expect("workspace mutex poisoned");
-        guard.clone().ok_or_else(|| CredentialError::new(CredentialErrorCode::NoWorkspace, "No folder is open."))?
-    };
-
-    let entry = Entry::new(&format!("{}:{}", root.display(), entry_name(&id)), "")
-        .map_err(|e| CredentialError::with_detail(CredentialErrorCode::Internal, "Could not create keyring entry.", format!("{e}")))?;
-
-    // Try to get the password; if it exists, the secret exists.
-    match entry.get_password() {
+pub fn has_secret(id: String) -> CredResult<bool> {
+    match keyring_entry(&id).get_password() {
         Ok(_) => Ok(true),
         Err(keyring::Error::NoEntry) => Ok(false),
         Err(e) => Err(CredentialError::keyring_error("check", &e)),
     }
 }
 
-/// Deletes a secret from the OS keychain.
+/// Deletes a secret. Deleting a secret that is already absent is not an error.
 #[tauri::command]
-pub fn delete_secret(state: State<'_, crate::workspace::WorkspaceState>, id: String) -> CredResult<()> {
-    let root = {
-        let guard = state.0.lock().expect("workspace mutex poisoned");
-        guard.clone().ok_or_else(|| CredentialError::new(CredentialErrorCode::NoWorkspace, "No folder is open."))?
-    };
-
-    let entry = Entry::new(&format!("{}:{}", root.display(), entry_name(&id)), "")
-        .map_err(|e| CredentialError::with_detail(CredentialErrorCode::Internal, "Could not create keyring entry.", format!("{e}")))?;
-
-    entry.delete_password().map_err(|e| CredentialError::keyring_error("delete", &e))
+pub fn delete_secret(id: String) -> CredResult<()> {
+    match keyring_entry(&id).delete_password() {
+        Ok(()) => Ok(()),
+        Err(keyring::Error::NoEntry) => Ok(()),
+        Err(e) => Err(CredentialError::keyring_error("delete", &e)),
+    }
 }

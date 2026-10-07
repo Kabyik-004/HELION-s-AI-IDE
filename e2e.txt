@@ -1,0 +1,48 @@
+﻿
+> forgeai@0.1.0 test:e2e
+> playwright test
+
+node.exe : [WebServer] 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([WebServer] :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: 
+https://rollupjs.org/configuration-options/#output-manualchunks
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 27 tests using 1 worker
+
+  ok  1 [chromium] ΓÇ║ tests\e2e\providers.spec.ts:31:3 ΓÇ║ provider settings ΓÇ║ adds a provider, masks its key, and never puts the secret in the page (1.1s)
+  ok  2 [chromium] ΓÇ║ tests\e2e\providers.spec.ts:45:3 ΓÇ║ provider settings ΓÇ║ reports missing fields instead of saving (738ms)
+  ok  3 [chromium] ΓÇ║ tests\e2e\providers.spec.ts:56:3 ΓÇ║ provider settings ΓÇ║ tests a connection, reporting success and then a rejected key (1.0s)
+  ok  4 [chromium] ΓÇ║ tests\e2e\providers.spec.ts:73:3 ΓÇ║ provider settings ΓÇ║ edits a provider, disables it, and removes its key (1.1s)
+  ok  5 [chromium] ΓÇ║ tests\e2e\providers.spec.ts:96:3 ΓÇ║ provider settings ΓÇ║ deletes a provider after confirmation (896ms)
+  ok  6 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:26:3 ΓÇ║ shell layout ΓÇ║ renders every major region and reports no console errors (1.5s)
+  ok  7 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:46:3 ΓÇ║ shell layout ΓÇ║ lists the example project and opens a file into a tab (855ms)
+  ok  8 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:71:3 ΓÇ║ shell layout ΓÇ║ marks unsaved edits and saves them without duplicating text (993ms)
+  ok  9 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:95:3 ΓÇ║ shell layout ΓÇ║ switches between the terminal and problems views (608ms)
+  ok 10 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:112:3 ΓÇ║ AI assistant panel ΓÇ║ accepts a message and states plainly that no provider is connected (598ms)
+  ok 11 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:129:3 ΓÇ║ panel controls ΓÇ║ toggles the side panel with the keyboard (536ms)
+  ok 12 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:140:3 ΓÇ║ panel controls ΓÇ║ resizes the side panel by dragging its divider (691ms)
+  ok 13 [chromium] ΓÇ║ tests\e2e\shell.spec.ts:162:3 ΓÇ║ responsiveness ΓÇ║ collapses panels on narrow windows while keeping the controls reachable (620ms)
+  ok 14 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:29:3 ΓÇ║ explorer navigation ΓÇ║ expands nested folders lazily and shows real contents (639ms)
+  ok 15 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:48:3 ΓÇ║ explorer navigation ΓÇ║ opens a file, keeps several tabs, and switches between them (1.1s)
+  ok 16 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:68:3 ΓÇ║ explorer navigation ΓÇ║ reports binary files instead of loading them into the editor (613ms)
+  ok 17 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:80:3 ΓÇ║ file operations ΓÇ║ creates a file and opens it (789ms)
+  ok 18 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:92:3 ΓÇ║ file operations ΓÇ║ creates a folder (702ms)
+  ok 19 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:102:3 ΓÇ║ file operations ΓÇ║ rejects an invalid name before touching the file system (658ms)
+  ok 20 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:114:3 ΓÇ║ file operations ΓÇ║ rejects a name that already exists (617ms)
+  ok 21 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:124:3 ΓÇ║ file operations ΓÇ║ renames a file and updates its open tab (994ms)
+  ok 22 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:148:3 ΓÇ║ file operations ΓÇ║ renames a folder (753ms)
+  ok 23 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:163:3 ΓÇ║ file operations ΓÇ║ requires confirmation before deleting, and closes the deleted file's tab (1.1s)
+  ok 24 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:184:3 ΓÇ║ file operations ΓÇ║ deletes a folder, warning that its contents go with it (641ms)
+  ok 25 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:198:3 ΓÇ║ unsaved changes ΓÇ║ asks before closing a dirty file and honours each answer (1.2s)
+  ok 26 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:220:3 ΓÇ║ unsaved changes ΓÇ║ saves an edit, clears the dirty marker, and keeps the text after reopening (1.2s)
+  ok 27 [chromium] ΓÇ║ tests\e2e\workspace.spec.ts:244:3 ΓÇ║ unsaved changes ΓÇ║ closing a dirty file prompts even from the Save path (1.0s)
+
+  27 passed (58.6s)

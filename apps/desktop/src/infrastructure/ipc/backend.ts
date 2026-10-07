@@ -91,4 +91,11 @@ export const backend = {
   /* Preference storage: a single JSON file in the app config directory */
   loadAppState: () => call<Record<string, unknown> | null>("load_app_state"),
   saveAppState: (value: Record<string, unknown>) => call<void>("save_app_state", { value }),
+
+  /* Credential store: the OS keychain on the desktop. Only opaque ids travel here; a secret is
+     passed only on an explicit write and returned only on an explicit, deliberate read. */
+  setSecret: (id: string, secret: string) => call<void>("set_secret", { id, secret }),
+  getSecret: (id: string) => call<string>("get_secret", { id }),
+  hasSecret: (id: string) => call<boolean>("has_secret", { id }),
+  deleteSecret: (id: string) => call<void>("delete_secret", { id }),
 } as const;

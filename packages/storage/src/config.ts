@@ -3,6 +3,32 @@ import { createLogger, Emitter, type Disposable, type Logger } from "@forgeai/sh
 import type { KeyValueStore } from "./key-value-store";
 
 /**
+ * One configured provider instance.
+ *
+ * A provider *type* (e.g. `openai`) may be configured more than once, so each configured
+ * instance carries its own unique `id` (e.g. `openai-personal`, `openai-work`). This lets a
+ * developer keep separate credentials and endpoints for the same provider.
+ *
+ * SECURITY: this is **non-secret configuration only**. The API key for an instance is stored
+ * separately in the secure credential store under `provider:<id>:apiKey` and must never be
+ * added to this type.
+ */
+export interface ProviderInstanceConfig {
+  /** Unique instance id, e.g. `openai-personal`. Never a secret. */
+  readonly id: string;
+  /** Provider type, matching a `ProviderDescriptor.id` (e.g. `openai`). */
+  readonly providerType: string;
+  /** Human-readable label shown in the UI, e.g. `OpenAI — Personal`. */
+  readonly displayName: string;
+  /** Non-secret endpoint override; falls back to the descriptor's default. */
+  readonly baseUrl?: string;
+  /** Model id selected for this instance. */
+  readonly model?: string;
+  /** Disabled instances stay configured but cannot be made active. */
+  readonly enabled: boolean;
+}
+
+/**
  * All of ForgeAI's user preferences.
  *
  * SECURITY: this type must never contain a secret. API keys live in the OS credential store
@@ -12,8 +38,10 @@ import type { KeyValueStore } from "./key-value-store";
 export interface ForgeAIConfig {
   readonly version: number;
   readonly provider: {
+    /** Active provider **instance** id, or undefined when nothing is selected. */
     readonly selectedProviderId?: string;
-    readonly selectedModelId?: string;
+    /** Every configured provider instance. Non-secret; keys live in the credential store. */
+    readonly instances: readonly ProviderInstanceConfig[];
   };
   readonly project: {
     /** Absolute paths, most-recent first. */
@@ -36,11 +64,11 @@ export interface ForgeAIConfig {
 }
 
 /** Bumped whenever the shape changes, so a future migration can detect old files. */
-export const CONFIG_VERSION = 1;
+export const CONFIG_VERSION = 2;
 
 export const DEFAULT_CONFIG: ForgeAIConfig = {
   version: CONFIG_VERSION,
-  provider: {},
+  provider: { instances: [] },
   project: { recentProjects: [] },
   agent: { maxIterations: 25, autoApproveSafeTools: true },
   permissions: { defaultPolicy: "ask", rememberSessionGrants: true },

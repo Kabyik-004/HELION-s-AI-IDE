@@ -28,6 +28,7 @@ import { createEditorActions, type EditorActions } from "../features/editor/edit
 import { createOpenProjectFeature } from "../features/workspace/open-project/openProject";
 import { createCloseProjectFeature } from "../features/workspace/close-project/closeProject";
 import { createSendMessageFeature } from "../features/assistant/send-message/sendMessage";
+import { createProviderActions, type ProviderActions } from "../features/providers/providers.actions";
 import { createPanelActions, type PanelActions } from "../features/panels/panels.actions";
 import { ideReducer } from "./ideReducer";
 import { createInitialIdeState, type IdeState } from "./ideTypes";
@@ -63,6 +64,7 @@ export interface IdeApi {
   readonly assistant: {
     sendMessage(content: string): void;
   };
+  readonly providers: ProviderActions;
   readonly panels: PanelActions;
   readonly ui: {
     dismissNotification(id: string): void;
@@ -87,7 +89,7 @@ const IdeContext = createContext<IdeContextValue | undefined>(undefined);
  * feature imports another. That is what makes them independently testable and replaceable.
  */
 export function IdeProvider({ children }: { readonly children: ReactNode }) {
-  const { services, rememberProject } = useAppState();
+  const { services, rememberProject, config } = useAppState();
   const [state, rawDispatch] = useReducer(ideReducer, services.workspace.current(), createInitialIdeState);
 
   // Mirrors the latest state so operations can read it without being recreated on every change.
@@ -125,8 +127,9 @@ export function IdeProvider({ children }: { readonly children: ReactNode }) {
       dialogs,
       notify,
       logger: services.logger,
+      providers: services.providerService,
     }),
-    [fileSystem, services.workspace, services.logger, recentProjects, dispatch, dialogs, notify],
+    [fileSystem, services.workspace, services.logger, services.providerService, recentProjects, dispatch, dialogs, notify],
   );
 
   const api = useMemo<IdeApi>(() => {
@@ -149,6 +152,7 @@ export function IdeProvider({ children }: { readonly children: ReactNode }) {
     const renamePath = createRenamePathFeature(deps, { reloadDirectory: loadDirectory.loadDirectory });
     const deletePath = createDeletePathFeature(deps, { reloadDirectory: loadDirectory.loadDirectory });
     const sendMessage = createSendMessageFeature(deps);
+    const providerActions = createProviderActions(deps, services.providerService);
     const panels = createPanelActions(deps);
 
     return {
@@ -179,6 +183,7 @@ export function IdeProvider({ children }: { readonly children: ReactNode }) {
         checkForExternalChanges: externalChanges.checkForExternalChanges,
       },
       assistant: { sendMessage: sendMessage.sendMessage },
+      providers: providerActions,
       panels,
       ui: {
         dismissNotification(id: string): void {
@@ -218,6 +223,13 @@ export function IdeProvider({ children }: { readonly children: ReactNode }) {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [api]);
+
+  // Keep the "key is configured" indicator in step with the configured provider instances, which
+  // change as configuration loads and as providers are added or removed.
+  const instanceIds = config.provider.instances.map((instance) => instance.id).join("|");
+  useEffect(() => {
+    void api.providers.refreshCredentials();
+  }, [api.providers, instanceIds]);
 
   const value = useMemo<IdeContextValue>(() => ({ state, api }), [state, api]);
 

@@ -9,10 +9,11 @@ ForgeAI is **not** a fork of, or a clone of, any existing IDE or agent. Its arch
 designed from first principles so that each major subsystem (UI, providers, agent, tools,
 context, terminal, git, storage, security) can be replaced independently.
 
-> **Status: Module 2 — Real Project Workspace (complete).**
-> Module 0 established the foundation, Module 1 built the desktop shell, and Module 2 turned it
-> into a real workspace: open any local folder, browse it, edit files and save them.
-> The AI is **not** connected yet — that is a later module. Nothing is faked; see *Current module*.
+> **Status: Module 3 — AI Provider & API Key System (complete).**
+> Module 0 established the foundation, Module 1 built the desktop shell, Module 2 turned it into a
+> real workspace, and Module 3 adds provider configuration, OS-keychain API keys and connection
+> testing. Chat and streaming are **not** connected yet — that is Module 4. Nothing is faked; see
+> *Current module*.
 
 ---
 
@@ -271,9 +272,26 @@ behaviour to a native ARM64 build for ForgeAI's purposes.
 
 ## Current module
 
-**Module 2 — Real Project Workspace, File Explorer & Editor (complete).**
+**Module 3 — AI Provider & API Key System (complete).**
 
-What works today:
+Open *Settings → Providers* to configure providers, store API keys securely and test connectivity:
+
+- **Multiple instances per provider** — "OpenAI Personal" and "OpenAI Work" can coexist, each with
+  its own endpoint, model and key.
+- **Keys never live in configuration.** They are written to the OS credential store through narrow
+  Rust commands; configuration holds only ids, names, endpoints, models and enabled flags.
+- **Keys are never displayed.** The UI knows only whether a key is stored, and the masked input is
+  cleared the moment it is saved.
+- **Enable, disable, activate, edit and delete** a provider. Deleting removes its key with it, so no
+  orphan secret is left behind.
+- **Connection testing** probes the real endpoint and reports, honestly, a success, a rejected key,
+  a rate limit or an unreachable host — never the key.
+- **Validation** runs in the form and again in the service; the service never trusts the UI.
+
+Provider chat, streaming and model listing are **not** implemented — those arrive in Module 4. The
+registry is populated with real OpenAI-compatible factories so Module 4 can build on it.
+
+The Module 2 workspace continues to work unchanged. What works today:
 
 - **Open any local folder** through the native picker (*Project → Open Folder…*). The chosen
   folder becomes the workspace, its contents are scanned, and recent folders are remembered
@@ -297,7 +315,8 @@ What works today:
 
 What deliberately does **not** exist yet (see the TODOs in code):
 
-- No AI provider connection. Provider adapters, credentials and streaming arrive in **Module 3**.
+- No AI chat, streaming or model listing. Providers can be configured and tested, but replies
+  arrive in **Module 4**.
 - No command execution and no PTY. The terminal view states this explicitly; a later module.
 - No git integration and no tool implementations; a later module.
 - No context engine providers, no agent loop.
@@ -332,9 +351,10 @@ FileSystemPort              ← the abstraction (packages/shared)
 | ------ | --------------------------------------------------------------------- |
 | 0      | Foundation — structure, abstractions, security boundary               |
 | 1      | IDE Shell — layout, panels, theme, editor, explorer UI, AI panel UI    |
-| **2**  | **Real Project Workspace — open a folder, real file system, file operations, save/edit (this module)** |
-| 3     | AI Providers — provider adapters, secure credential storage, streaming chat |
-| 4+     | Terminal (PTY, permission-gated commands), Git, tools, context engine, agent loop, autonomous tasks |
+| 2      | Real Project Workspace — open a folder, real file system, file operations, save/edit  |
+| **3**  | **AI Provider & API Key System — provider configuration, OS-keychain credentials, connection testing (this module)** |
+| 4      | AI Chat & Streaming — chat UI, streaming replies, model listing                        |
+| 5+     | Terminal (PTY, permission-gated commands), Git, tools, context engine, agent loop, autonomous tasks |
 
 Modules are intentionally independent. A later module may be developed without touching the UI,
 because the UI already depends on abstractions rather than implementations.
@@ -353,13 +373,15 @@ Security is a first-class design concern, not an afterthought.
    every tool, enforced in one place (`GuardedToolExecutor`) rather than scattered across tools.
 4. **No unrestricted shell.** ForgeAI does not implement arbitrary shell execution. Commands
    will be modelled as requests that must be approved. The terminal view reflects this.
-5. **Secrets are never stored in plain text.** API keys will live in the OS credential store
-   (Windows Credential Manager, macOS Keychain, Secret Service). Configuration files hold
-   references and preferences only.
+5. **Secrets are never stored in plain text.** API keys live in the OS credential store
+   (Windows Credential Manager, macOS Keychain, Secret Service) under `provider:<id>:apiKey`.
+   Configuration files hold preferences only — never a key, and a key never appears in a log or in
+   an error message.
 6. **Smallest possible surface.** Tauri IPC exposes as little as possible. Real capabilities are
-   added one module at a time, each with its own permission entry in
-   `src-tauri/capabilities/`. Module 2 added exactly one plugin permission — `dialog:allow-open`,
-   the native folder picker — and no general-purpose file plugin.
+   added one module at a time. Module 2 added exactly one plugin permission — `dialog:allow-open`,
+   the native folder picker — and no general-purpose file plugin. Module 3 added no plugin
+   permission at all: credential storage is four app-level commands that read and write the OS
+   keychain and nothing else.
 
 ---
 

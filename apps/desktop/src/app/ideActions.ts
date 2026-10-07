@@ -5,6 +5,7 @@ import type { AssistantAction } from "../features/assistant/assistant.slice";
 import type { LayoutAction } from "../features/panels/layout/layout.slice";
 import type { NotificationsAction } from "../features/notifications/notifications.slice";
 import type { DialogsAction } from "../features/dialogs/dialogs.slice";
+import type { ProvidersAction } from "../features/providers/providers.slice";
 
 /**
  * The store's action vocabulary.
@@ -21,4 +22,5 @@ export type IdeAction =
   | AssistantAction
   | LayoutAction
   | NotificationsAction
-  | DialogsAction;
+  | DialogsAction
+  | ProvidersAction;

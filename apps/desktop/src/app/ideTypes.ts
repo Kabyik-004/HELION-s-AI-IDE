@@ -8,6 +8,7 @@ import {
   type NotificationsSliceState,
 } from "../features/notifications/notifications.slice";
 import { initialDialogsSlice, type DialogsSliceState } from "../features/dialogs/dialogs.slice";
+import { initialProvidersSlice, type ProvidersSliceState } from "../features/providers/providers.slice";
 import { initialWorkspaceSlice, type WorkspaceSliceState } from "../features/workspace/workspace.slice";
 
 /**
@@ -25,6 +26,7 @@ export interface IdeState {
   readonly layout: LayoutSliceState;
   readonly notifications: NotificationsSliceState;
   readonly dialogs: DialogsSliceState;
+  readonly providers: ProvidersSliceState;
 }
 
 export function createInitialIdeState(workspace: Workspace | null): IdeState {
@@ -36,5 +38,6 @@ export function createInitialIdeState(workspace: Workspace | null): IdeState {
     layout: initialLayoutSlice(),
     notifications: initialNotificationsSlice(),
     dialogs: initialDialogsSlice(),
+    providers: initialProvidersSlice(),
   };
 }

@@ -2,6 +2,7 @@ import type { FileSystemPort, Logger } from "@forgeai/shared";
 
 import type { DialogService } from "../features/dialogs/dialogService";
 import type { Notify } from "../features/notifications/notify";
+import type { ProviderService } from "../features/providers/providerService";
 import type { WorkspaceService } from "../infrastructure/filesystem/workspaceService";
 import type { IdeAction } from "./ideActions";
 import type { IdeState } from "./ideTypes";
@@ -36,6 +37,8 @@ export interface FeatureDeps {
   /** Reads the current state. Safe to call inside an operation; always up to date. */
   readonly getState: () => IdeState;
   readonly dispatch: (action: IdeAction) => void;
+  /** Provider configuration and credentials. Never touched directly by a component. */
+  readonly providers: ProviderService;
   /** Asks the developer a question and awaits the answer. */
   readonly dialogs: DialogService;
   /** Reports an outcome to the developer. */

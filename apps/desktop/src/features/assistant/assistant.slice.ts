@@ -27,7 +27,8 @@ export function initialAssistantSlice(): AssistantSliceState {
         id: "intro-notice",
         role: "system",
         status: "notice",
-        content: "No AI provider is connected yet. Provider setup and streaming replies arrive in Module 3.",
+        content:
+          "No provider is connected yet. Set one up under Settings → Providers to store an API key. Chat replies arrive in a later module.",
         createdAt: now + 1,
       },
     ],

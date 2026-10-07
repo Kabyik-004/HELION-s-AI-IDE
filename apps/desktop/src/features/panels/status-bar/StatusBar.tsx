@@ -18,6 +18,9 @@ export function StatusBar() {
   const unsaved = Object.values(editor.buffers).filter((buffer) => isDirty(buffer)).length;
 
   const runtime = appInfo === undefined ? "browser preview" : `v${appInfo.version}`;
+  const activeProvider = config.provider.instances.find(
+    (instance) => instance.id === config.provider.selectedProviderId,
+  );
 
   return (
     <footer className="flex h-6 shrink-0 items-center gap-3 border-t border-ink-700 bg-ink-900 px-2.5 font-mono text-[10px] text-ink-400">
@@ -58,7 +61,7 @@ export function StatusBar() {
 
       <span className="flex items-center gap-1" title="Selected AI provider and model">
         <InfoIcon size={12} className="text-ink-500" />
-        {config.provider.selectedProviderId ?? "no provider"} / {config.provider.selectedModelId ?? "no model"}
+        {activeProvider?.displayName ?? "no provider"} / {activeProvider?.model ?? "no model"}
       </span>
       <span className="text-accent-400/90">{runtime}</span>
     </footer>

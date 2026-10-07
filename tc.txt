@@ -1,0 +1,52 @@
+﻿
+> forgeai@0.1.0 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> @forgeai/desktop@0.1.0 typecheck
+> npm run typecheck:app && npm run typecheck:node
+
+
+> @forgeai/desktop@0.1.0 typecheck:app
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/desktop@0.1.0 typecheck:node
+> tsc --noEmit -p tsconfig.node.json
+
+
+> @forgeai/agent@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/context@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/git@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/providers@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/security@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/shared@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/storage@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/terminal@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @forgeai/tools@0.1.0 typecheck
+> tsc --noEmit -p tsconfig.json
+

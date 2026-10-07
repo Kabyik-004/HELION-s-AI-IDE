@@ -13,6 +13,10 @@ import {
 } from "@forgeai/storage";
 import { GuardedToolExecutor, InMemoryToolRegistry, type ToolExecutor, type ToolRegistry } from "@forgeai/tools";
 
+import { registerBuiltInProviders } from "../features/ai-providers/factories";
+import { TauriCredentialStore } from "../features/credentials/tauriCredentialStore";
+import { createFetchConnectionTester } from "../features/providers/connectionTester";
+import { ProviderService } from "../features/providers/providerService";
 import { isTauri } from "../infrastructure/ipc/isTauri";
 import { TauriKeyValueStore } from "../infrastructure/storage/tauriKeyValueStore";
 import { createWorkspaceService, type WorkspaceService } from "../infrastructure/filesystem/workspaceService";
@@ -25,12 +29,14 @@ import { createWorkspaceService, type WorkspaceService } from "../infrastructure
  * subsystem independently replaceable, and it is exactly what Module 2 relied on: opening a real
  * folder required new implementations here and no changes to the explorer or the editor.
  *
- * The environment decides two things:
+ * The environment decides three things:
  *
  *  - **Key/value storage.** Inside Tauri, preferences persist to the application config file;
  *    in a browser they are in memory.
  *  - **The file system.** Inside Tauri, real workspace access through Rust; in a browser, the
  *    bundled example project.
+ *  - **The credential store.** Inside Tauri, the OS keychain; in a browser, an in-memory store
+ *    that is explicit about being development-only.
  */
 export interface ForgeAIServices {
   readonly logger: Logger;
@@ -40,6 +46,8 @@ export interface ForgeAIServices {
   readonly credentialStore: SecureCredentialStore;
   readonly credentials: CredentialStorePort;
   readonly providerRegistry: ProviderRegistry;
+  /** Provider configuration, validation and connection testing. One owner for all of it. */
+  readonly providerService: ProviderService;
   readonly toolRegistry: ToolRegistry;
   readonly toolExecutor: ToolExecutor;
   readonly permissions: PermissionManager;
@@ -56,10 +64,24 @@ export function createServices(): ForgeAIServices {
   const store: KeyValueStore = native ? new TauriKeyValueStore() : new InMemoryKeyValueStore();
   const config = new DefaultConfigService({ store, logger: logger.child("config") });
 
-  const credentialStore = new InMemoryCredentialStore();
+  // Secrets: the OS keychain on the desktop, memory in a browser (development only).
+  const credentialStore: SecureCredentialStore = native
+    ? new TauriCredentialStore()
+    : new InMemoryCredentialStore();
   const credentials = new CredentialStoreAdapter(credentialStore);
 
+  // Providers: real factories where ForgeAI can construct a client, catalogue metadata otherwise.
   const providerRegistry = new DefaultProviderRegistry();
+  registerBuiltInProviders(providerRegistry);
+
+  const providerService = new ProviderService({
+    config,
+    credentialStore,
+    registry: providerRegistry,
+    connectionTester: createFetchConnectionTester(credentials, logger.child("providers")),
+    logger: logger.child("providers"),
+  });
+
   const toolRegistry = new InMemoryToolRegistry();
 
   // Deny-all until an approval dialog exists. ForgeAI must never act without a human when it has
@@ -88,6 +110,7 @@ export function createServices(): ForgeAIServices {
     credentialStore,
     credentials,
     providerRegistry,
+    providerService,
     toolRegistry,
     toolExecutor,
     permissions,

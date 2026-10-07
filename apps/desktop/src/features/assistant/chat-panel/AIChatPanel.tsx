@@ -18,7 +18,7 @@ import { ChatMessageItem } from "./ChatMessageItem";
  */
 export function AIChatPanel() {
   const { state, api } = useIde();
-  const { config, providers } = useAppState();
+  const { config } = useAppState();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages } = state.assistant;
 
@@ -28,8 +28,11 @@ export function AIChatPanel() {
     if (container !== null) container.scrollTop = container.scrollHeight;
   }, [messages.length]);
 
-  const provider = providers.find((candidate) => candidate.id === config.provider.selectedProviderId);
-  const connected = provider !== undefined && config.provider.selectedModelId !== undefined;
+  const active = config.provider.instances.find(
+    (instance) => instance.id === config.provider.selectedProviderId,
+  );
+  const keyPresent = active !== undefined && state.providers.credentialPresent[active.id] === true;
+  const connected = active !== undefined && active.enabled && keyPresent;
 
   return (
     <section aria-label="AI assistant" className="flex h-full min-h-0 flex-col border-l border-ink-700/70 bg-ink-900">
@@ -45,14 +48,14 @@ export function AIChatPanel() {
 
       <div
         className="flex shrink-0 items-center gap-2 border-b border-ink-700/70 px-3 py-1.5"
-        title={connected ? "Connected" : "No provider is connected yet (Module 3)"}
+        title={connected ? "Connected" : "No provider is connected yet"}
       >
         <span
           className={["h-1.5 w-1.5 shrink-0 rounded-full", connected ? "bg-success-500" : "bg-ink-500"].join(" ")}
           aria-hidden
         />
         <span className="truncate font-mono text-[10px] text-ink-400">
-          {provider?.name ?? "no provider"} · {config.provider.selectedModelId ?? "no model"}
+          {active?.displayName ?? "no provider"} · {active?.model ?? "no model"}
         </span>
       </div>
 

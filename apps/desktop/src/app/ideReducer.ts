@@ -5,6 +5,7 @@ import { reduceAssistant } from "../features/assistant/assistant.slice";
 import { reduceLayout } from "../features/panels/layout/layout.slice";
 import { reduceNotifications } from "../features/notifications/notifications.slice";
 import { reduceDialogs } from "../features/dialogs/dialogs.slice";
+import { reduceProviders } from "../features/providers/providers.slice";
 import type { IdeAction } from "./ideActions";
 import type { IdeState } from "./ideTypes";
 
@@ -27,6 +28,7 @@ export function ideReducer(state: IdeState, action: IdeAction): IdeState {
     layout: reduceLayout(state.layout, action),
     notifications: reduceNotifications(state.notifications, action),
     dialogs: reduceDialogs(state.dialogs, action),
+    providers: reduceProviders(state.providers, action),
   };
 
   // Preserve the top-level reference when nothing changed, so unrelated re-renders are avoided.
@@ -37,7 +39,8 @@ export function ideReducer(state: IdeState, action: IdeAction): IdeState {
     next.assistant === state.assistant &&
     next.layout === state.layout &&
     next.notifications === state.notifications &&
-    next.dialogs === state.dialogs
+    next.dialogs === state.dialogs &&
+    next.providers === state.providers
   ) {
     return state;
   }

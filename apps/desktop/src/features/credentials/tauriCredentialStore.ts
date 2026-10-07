@@ -1,77 +1,39 @@
-import { invoke } from "@tauri-apps/api/core";
-
 import { FileSystemError } from "@forgeai/shared";
-import type { CredentialStorePort, SecretReference } from "@forgeai/shared";
+import type { SecureCredentialStore } from "@forgeai/storage";
+
+import { backend } from "../../infrastructure/ipc/backend";
 
 /**
- * `SecureCredentialStore` backed by the OS keychain via Tauri commands.
+ * `SecureCredentialStore` backed by the OS keychain (Windows Credential Manager, macOS Keychain,
+ * Linux Secret Service) through the Rust `keyring` crate.
  *
- * This is the production implementation that uses the OS keychain (Windows Credential Manager,
-/// macOS Keychain, Linux Secret Service) via the Rust `keyring` crate.
-export class TauriCredentialStore {
+ * This is the production implementation used by the desktop app; the browser preview substitutes
+ * `InMemoryCredentialStore`. Credentials are application-global (they do not require an open
+ * folder) and every call goes through `backend`, which is the only module that speaks Tauri IPC.
+ *
+ * Nothing here is ever written to configuration: the store holds secrets, `ConfigService` holds
+ * preferences, and the two are never mixed.
+ */
+export class TauriCredentialStore implements SecureCredentialStore {
   async setSecret(id: string, secret: string): Promise<void> {
-    try {
-      await invoke("set_secret", { id, secret });
-    } catch (cause) {
-      throw FileSystemError.from(cause);
-    }
+    await backend.setSecret(id, secret);
   }
 
   async getSecret(id: string): Promise<string | undefined> {
     try {
-      return await invoke("get_secret", { id });
+      return await backend.getSecret(id);
     } catch (cause) {
-      const error = FileSystemError.from(cause);
-      if (error.isNotFound) return undefined;
-      throw error;
-    }
-  }
-
-  async deleteSecret(id: string): Promise<void> {
-    try {
-      await invoke("delete_secret", { id });
-    } catch (cause) {
-      throw FileSystemError.from(cause);
+      // "There is no such credential" is a normal answer, not a failure.
+      if (cause instanceof FileSystemError && cause.isNotFound) return undefined;
+      throw cause;
     }
   }
 
   async hasSecret(id: string): Promise<boolean> {
-    try {
-      return await invoke("has_secret", { id });
-    } catch (cause) {
-      throw FileSystemError.from(cause);
-    }
-  }
-}
-
-/**
- * Adapts a `SecureCredentialStore` to the `CredentialStorePort` that provider adapters use.
- */
-export class CredentialStoreAdapter implements CredentialStorePort {
-  readonly #store: { setSecret(id: string, secret: string): Promise<void>; getSecret(id: string): Promise<string | undefined>; deleteSecret(id: string): Promise<void>; hasSecret(id: string): Promise<boolean> };
-
-  constructor(store: { setSecret(id: string, secret: string): Promise<void>; getSecret(id: string): Promise<string | undefined>; deleteSecret(id: string): Promise<void>; hasSecret(id: string): Promise<boolean> }) {
-    this.#store = store;
+    return backend.hasSecret(id);
   }
 
-  async get(reference: SecretReference): Promise<string | undefined> {
-    return this.#store.getSecret(reference.id);
+  async deleteSecret(id: string): Promise<void> {
+    await backend.deleteSecret(id);
   }
-
-  async set(reference: SecretReference, secret: string): Promise<void> {
-    await this.#store.setSecret(reference.id, secret);
-  }
-
-  async delete(reference: SecretReference): Promise<void> {
-    await this.#store.deleteSecret(reference.id);
-  }
-
-  async has(reference: SecretReference): Promise<boolean> {
-    return this.#store.hasSecret(reference.id);
-  }
-}
-
-/** Builds the canonical credential id for a provider's API key. */
-export function providerCredentialId(providerId: string): string {
-  return `provider:${providerId}:apiKey`;
 }
